@@ -132,7 +132,7 @@ _error_exit_with_cleanup() {
 show_banner
 
 print_msg "$CYAN" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-print_msg "$BOLD" "                  AI Quickstart NVIDIA-Nemotron-Nano-9B-v2 LLM"
+print_msg "$BOLD" "            AI Quickstart NVIDIA-Nemotron-Nano-9B-v2 LLM"
 print_msg "$CYAN" "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 print_msg "$YELLOW" "This script will:"
