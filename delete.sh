@@ -17,8 +17,8 @@ readonly PROJECT_NAME="ai-quickstart-nvidia-nemotron-nano-9b-v2"
 # Get directory of this script (empty if running via curl pipe)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-}" 2>/dev/null)" 2>/dev/null && pwd 2>/dev/null || echo "")"
 
-# Remote repository base URL (for downloading files when running remotely)
-REPO_RAW_BASE="https://raw.githubusercontent.com/linode/${PROJECT_NAME}/main"
+# Remote repository base URL for shared tools
+TOOLS_RAW_BASE="https://raw.githubusercontent.com/linode/ai-quickstart-gpt-oss-20b/main"
 
 # Temp directory for remote execution (will be cleaned up on exit)
 REMOTE_TEMP_DIR=""
@@ -26,29 +26,22 @@ REMOTE_TEMP_DIR=""
 #==============================================================================
 # Setup: Ensure required files exist (download if running remotely)
 #==============================================================================
+# _dl - Get file from local or download from remote
+# Usage: path=$(_dl <local_dir> <file_path> <repo_base_url> <temp_dir>)
+# Returns: path to file (local or downloaded), empty if download fails
+_dl() {
+    local ld="$1" fp="$2" url="$3" td="$4"
+    [ -n "$ld" ] && [ -f "${ld}/${fp}" ] && { echo "${ld}/${fp}"; return; }
+    local dest="${td}/${fp}"; mkdir -p "$(dirname "$dest")"
+    echo "Downloading ${fp}..." >&2
+    curl -fsSL "${url}/${fp}" -o "$dest" 2>/dev/null && echo "$dest"
+}
+
 _setup_required_files() {
-    local files=("script/quickstart_tools.sh")
-    local all_exist=true
+    REMOTE_TEMP_DIR="${TMPDIR:-/tmp}/${PROJECT_NAME}-$$"
 
-    # Check if all required files exist locally (also detect /dev/fd from process substitution)
-    [[ -z "$SCRIPT_DIR" || "$SCRIPT_DIR" == /dev/* ]] && all_exist=false
-    for f in "${files[@]}"; do [ ! -f "${SCRIPT_DIR}/$f" ] && all_exist=false; done
-
-    if [ "$all_exist" = true ]; then
-        QUICKSTART_TOOLS_PATH="${SCRIPT_DIR}/script/quickstart_tools.sh"
-    else
-        # Download required files to temp directory
-        echo "Downloading required files..."
-        REMOTE_TEMP_DIR="${TMPDIR:-/tmp}/${PROJECT_NAME}-$$"
-        mkdir -p "${REMOTE_TEMP_DIR}/script"
-
-        for f in "${files[@]}"; do
-            curl -fsSL "${REPO_RAW_BASE}/$f" -o "${REMOTE_TEMP_DIR}/$f" || { echo "ERROR: Failed to download $f" >&2; exit 1; }
-        done
-
-        SCRIPT_DIR="$REMOTE_TEMP_DIR"
-        QUICKSTART_TOOLS_PATH="${REMOTE_TEMP_DIR}/script/quickstart_tools.sh"
-    fi
+    # Download quickstart_tools.sh from tools repo (shared across projects)
+    QUICKSTART_TOOLS_PATH=$(_dl "$SCRIPT_DIR" "script/quickstart_tools.sh" "$TOOLS_RAW_BASE" "$REMOTE_TEMP_DIR") || { echo "ERROR: Failed to get quickstart_tools.sh" >&2; exit 1; }
 
     export QUICKSTART_TOOLS_PATH
 }
